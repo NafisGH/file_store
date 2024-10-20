@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./style.css">
+    <title>File Manager</title>
+</head>
+
+<body>
+    <div id="app">
+        <header class="toolbar">
+            <!-- Header с кнопками управления папками и файлами -->
+            <button id="createFolder">Создать папку</button>
+            <button id="deleteFile">Удалить файл</button>
+            <button id="renameFile">Переименовать файл</button>
+            <button id="uploadFile">Загрузить файл</button>
+            <button id="downloadFile">Скачать файл</button>
+        </header>
+        <div class="container">
+            <!-- Боковая колонка для структуры проекта -->
+            <aside id="sidebar" class="file-explorer">
+                <div id="fileTree">
+                    <!-- Пример дерева файлов -->
+
+                </div>
+            </aside>
+            <!-- Большое окно для отображения содержимого файла -->
+            <main id="fileContent" class="editor">
+                <div id="contentViewer" class="code-viewer">
+                    <!-- Здесь будет отображаться содержимое выбранного файла -->
+                    <pre><code id="codeContent">Выберите файл, чтобы увидеть содержимое</code></pre>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="./main.js" defer></script>
+</body>
+
+</html>

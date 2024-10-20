@@ -1,0 +1,54 @@
+
+body {
+  display: flex;
+  height: 100vh;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+header {
+  width: 100%;
+  padding: 10px;
+  background: #282c34;
+  color: white;
+  display: flex;
+  gap: 10px;
+}
+
+header button {
+  cursor: pointer;
+  padding: 10px;
+  border: none;
+  background: #61dafb;
+  color: #282c34;
+  border-radius: 5px;
+}
+
+aside#sidebar {
+  width: 20%;
+  background: #f3f3f3;
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+main#fileContent {
+  width: 80%;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+ul#fileTree {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+ul#fileTree li {
+  cursor: pointer;
+  padding: 5px;
+  transition: background 0.2s;
+}
+
+ul#fileTree li:hover {
+  background: #e6e6e6;
+}
