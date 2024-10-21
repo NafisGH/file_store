@@ -92,23 +92,18 @@ function renderFileTree(treeData: any[], parentElement: HTMLElement = document.g
                 const filePath = li.dataset.path;
                 if (filePath) {
                     fetchFileContent(filePath);
-                }
-            });
 
-            // Добавить возможность редактирования файла по двойному клику
-            li.addEventListener('dblclick', (e) => {
-                e.stopPropagation();
-
-                // Получаем путь к файлу
-                const filePath = li.dataset.path;
-                if (filePath) {
-                    // Вызов функции для редактирования содержимого файла
-                    editFileContent(filePath);
+                    // Показать кнопку скачивания
+                    const downloadZipBtn = document.getElementById('downloadZip');
+                    if (downloadZipBtn) {
+                        downloadZipBtn.style.display = 'block';
+                    }
                 }
             });
         }
     });
 }
+
 
 
 
@@ -191,6 +186,29 @@ async function fetchFileContent(filePath: string) {
         console.error('Ошибка при загрузке содержимого файла:', error);
     }
 }
+
+// Функция для скачивания файла в формате ZIP
+async function downloadFileAsZip(filePath: string) {
+    try {
+        const response = await fetch(`${API_URL}/download-zip?path=${encodeURIComponent(filePath)}`);
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${filePath.split('/').pop()}.zip`; // Имя файла с расширением .zip
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } else {
+            alert('Ошибка при скачивании файла');
+        }
+    } catch (error) {
+        console.error('Ошибка при скачивании файла:', error);
+    }
+}
+
 
 
 // Функция для отображения и редактирования содержимого файла в окне
@@ -325,6 +343,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteItemBtn = document.getElementById('deleteFile');
     const renameItemBtn = document.getElementById('renameFile');
     const uploadFileBtn = document.getElementById('uploadFile');
+const downloadZipBtn = document.getElementById('downloadZip');
+
+if (downloadZipBtn) {
+    downloadZipBtn.addEventListener('click', () => {
+        const selectedItem = document.querySelector('.selected') as HTMLElement;
+        if (selectedItem && selectedItem.dataset.path) {
+            downloadFileAsZip(selectedItem.dataset.path);
+        } else {
+            alert('Пожалуйста, выберите файл для скачивания');
+        }
+    });
+}
+
 
     if (createFolderBtn) {
         createFolderBtn.addEventListener('click', () => {

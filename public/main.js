@@ -130,16 +130,11 @@ function renderFileTree(treeData, parentElement) {
                 var filePath = li.dataset.path;
                 if (filePath) {
                     fetchFileContent(filePath);
-                }
-            });
-            // Добавить возможность редактирования файла по двойному клику
-            li.addEventListener('dblclick', function (e) {
-                e.stopPropagation();
-                // Получаем путь к файлу
-                var filePath = li.dataset.path;
-                if (filePath) {
-                    // Вызов функции для редактирования содержимого файла
-                    editFileContent(filePath);
+                    // Показать кнопку скачивания
+                    var downloadZipBtn = document.getElementById('downloadZip');
+                    if (downloadZipBtn) {
+                        downloadZipBtn.style.display = 'block';
+                    }
                 }
             });
         }
@@ -271,6 +266,43 @@ function fetchFileContent(filePath) {
         });
     });
 }
+// Функция для скачивания файла в формате ZIP
+function downloadFileAsZip(filePath) {
+    return __awaiter(this, void 0, void 0, function () {
+        var response, blob, url, a, error_5;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 5, , 6]);
+                    return [4 /*yield*/, fetch("".concat(API_URL, "/download-zip?path=").concat(encodeURIComponent(filePath)))];
+                case 1:
+                    response = _a.sent();
+                    if (!response.ok) return [3 /*break*/, 3];
+                    return [4 /*yield*/, response.blob()];
+                case 2:
+                    blob = _a.sent();
+                    url = URL.createObjectURL(blob);
+                    a = document.createElement('a');
+                    a.href = url;
+                    a.download = "".concat(filePath.split('/').pop(), ".zip"); // Имя файла с расширением .zip
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    return [3 /*break*/, 4];
+                case 3:
+                    alert('Ошибка при скачивании файла');
+                    _a.label = 4;
+                case 4: return [3 /*break*/, 6];
+                case 5:
+                    error_5 = _a.sent();
+                    console.error('Ошибка при скачивании файла:', error_5);
+                    return [3 /*break*/, 6];
+                case 6: return [2 /*return*/];
+            }
+        });
+    });
+}
 // Функция для отображения и редактирования содержимого файла в окне
 function displayFileContent(content) {
     var _this = this;
@@ -284,7 +316,7 @@ function displayFileContent(content) {
         editableContent_1.style.padding = "10px";
         // Добавляем обработчик для автоматического сохранения при изменении текста
         editableContent_1.addEventListener('input', function () { return __awaiter(_this, void 0, void 0, function () {
-            var newContent, error_5;
+            var newContent, error_6;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -298,8 +330,8 @@ function displayFileContent(content) {
                         _a.sent();
                         return [3 /*break*/, 4];
                     case 3:
-                        error_5 = _a.sent();
-                        console.error('Ошибка при сохранении изменений:', error_5);
+                        error_6 = _a.sent();
+                        console.error('Ошибка при сохранении изменений:', error_6);
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
                 }
@@ -313,7 +345,7 @@ function displayFileContent(content) {
 // Функция для автоматического сохранения содержимого файла
 function saveFileContent(filePath, content) {
     return __awaiter(this, void 0, void 0, function () {
-        var response, error_6;
+        var response, error_7;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -332,8 +364,8 @@ function saveFileContent(filePath, content) {
                     }
                     return [3 /*break*/, 3];
                 case 2:
-                    error_6 = _a.sent();
-                    console.error('Ошибка при автоматическом сохранении файла:', error_6);
+                    error_7 = _a.sent();
+                    console.error('Ошибка при автоматическом сохранении файла:', error_7);
                     return [3 /*break*/, 3];
                 case 3: return [2 /*return*/];
             }
@@ -343,7 +375,7 @@ function saveFileContent(filePath, content) {
 // Функция для создания папки
 function createFolder() {
     return __awaiter(this, void 0, void 0, function () {
-        var folderName, response, error_7;
+        var folderName, response, error_8;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -371,8 +403,8 @@ function createFolder() {
                     }
                     return [3 /*break*/, 4];
                 case 3:
-                    error_7 = _a.sent();
-                    console.error('Ошибка при создании папки:', error_7);
+                    error_8 = _a.sent();
+                    console.error('Ошибка при создании папки:', error_8);
                     return [3 /*break*/, 4];
                 case 4: return [2 /*return*/];
             }
@@ -382,7 +414,7 @@ function createFolder() {
 // Функция для удаления элемента (папка или файл)
 function deleteItem(itemPath) {
     return __awaiter(this, void 0, void 0, function () {
-        var response, error_8;
+        var response, error_9;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -408,8 +440,8 @@ function deleteItem(itemPath) {
                     }
                     return [3 /*break*/, 4];
                 case 3:
-                    error_8 = _a.sent();
-                    console.error('Ошибка при удалении элемента:', error_8);
+                    error_9 = _a.sent();
+                    console.error('Ошибка при удалении элемента:', error_9);
                     return [3 /*break*/, 4];
                 case 4: return [2 /*return*/];
             }
@@ -419,7 +451,7 @@ function deleteItem(itemPath) {
 // Функция для переименования элемента (папка или файл)
 function renameItem(oldPath) {
     return __awaiter(this, void 0, void 0, function () {
-        var newName, response, error_9;
+        var newName, response, error_10;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -447,8 +479,8 @@ function renameItem(oldPath) {
                     }
                     return [3 /*break*/, 4];
                 case 3:
-                    error_9 = _a.sent();
-                    console.error('Ошибка при переименовании:', error_9);
+                    error_10 = _a.sent();
+                    console.error('Ошибка при переименовании:', error_10);
                     return [3 /*break*/, 4];
                 case 4: return [2 /*return*/];
             }
@@ -462,6 +494,18 @@ document.addEventListener('DOMContentLoaded', function () {
     var deleteItemBtn = document.getElementById('deleteFile');
     var renameItemBtn = document.getElementById('renameFile');
     var uploadFileBtn = document.getElementById('uploadFile');
+    var downloadZipBtn = document.getElementById('downloadZip');
+    if (downloadZipBtn) {
+        downloadZipBtn.addEventListener('click', function () {
+            var selectedItem = document.querySelector('.selected');
+            if (selectedItem && selectedItem.dataset.path) {
+                downloadFileAsZip(selectedItem.dataset.path);
+            }
+            else {
+                alert('Пожалуйста, выберите файл для скачивания');
+            }
+        });
+    }
     if (createFolderBtn) {
         createFolderBtn.addEventListener('click', function () {
             console.log("Кнопка 'Создать папку' была нажата");

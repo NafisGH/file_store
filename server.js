@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import cors from 'cors';
 import multer from 'multer';
+import archiver from 'archiver';
 
 const app = express();
 const PORT = 3000;
@@ -38,6 +39,27 @@ const storage = multer.diskStorage({
     }
 });
 const upload = multer({ storage });
+
+// Маршрут для скачивания файла в формате ZIP
+app.get('/api/download-zip', (req, res) => {
+    const { path: filePath } = req.query;
+    const fullPath = path.join(ROOT_DIR, filePath);
+
+    if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
+        res.setHeader('Content-Disposition', `attachment; filename=${path.basename(filePath)}.zip`);
+        res.setHeader('Content-Type', 'application/zip');
+
+        const archive = archiver('zip', {
+            zlib: { level: 9 } // Оптимальная степень сжатия
+        });
+
+        archive.pipe(res);
+        archive.file(fullPath, { name: path.basename(filePath) });
+        archive.finalize();
+    } else {
+        res.status(404).send('Файл не найден');
+    }
+});
 
 // Маршрут для редактирования содержимого файла
 app.put('/api/edit-file', (req, res) => {
