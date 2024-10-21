@@ -34,7 +34,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-/* main.ts */
 console.log("JavaScript файл загружен и выполняется");
 var API_URL = 'http://localhost:3000/api';
 // Получение структуры файлов
@@ -69,10 +68,168 @@ function fetchFileStructure() {
         });
     });
 }
-// Создание папки
+// Функция для отображения дерева файлов
+function renderFileTree(treeData, parentElement) {
+    if (parentElement === void 0) { parentElement = document.getElementById('fileTree'); }
+    parentElement.innerHTML = ''; // Очищаем дерево перед повторной отрисовкой
+    console.log('Рендеринг дерева файлов...');
+    treeData.forEach(function (item) {
+        var li = document.createElement('li');
+        li.textContent = item.name;
+        li.className = item.type === 'folder' ? 'folder' : 'file';
+        li.dataset.path = parentElement.dataset.path ? "".concat(parentElement.dataset.path, "/").concat(item.name) : item.name;
+        // Добавляем иконки в зависимости от типа элемента
+        var icon = document.createElement('img');
+        icon.src = item.type === 'folder' ? './icons/folder.svg' : './icons/file.svg';
+        icon.alt = item.type === 'folder' ? 'Folder Icon' : 'File Icon';
+        icon.style.width = '16px';
+        icon.style.height = '16px';
+        icon.style.marginRight = '5px';
+        li.prepend(icon); // Вставляем иконку перед текстом
+        parentElement.appendChild(li);
+        // Если элемент - папка, создаем вложенный список и добавляем обработчик для открытия/закрытия
+        if (item.type === 'folder') {
+            var ul_1 = document.createElement('ul');
+            ul_1.style.display = 'none'; // По умолчанию вложенные элементы скрыты
+            li.appendChild(ul_1);
+            if (item.children && item.children.length > 0) {
+                renderFileTree(item.children, ul_1);
+            }
+            // Добавляем обработчик клика, чтобы открывать/закрывать папку
+            li.addEventListener('click', function (e) {
+                e.stopPropagation(); // Останавливаем всплытие события
+                // Снимаем выделение с предыдущего элемента
+                var previouslySelected = document.querySelector('.selected');
+                if (previouslySelected) {
+                    previouslySelected.classList.remove('selected');
+                }
+                // Выделяем текущий элемент
+                li.classList.add('selected');
+                var icon = li.querySelector('img');
+                if (ul_1.style.display === 'none') {
+                    ul_1.style.display = 'block';
+                    icon.src = './icons/folder_open.svg'; // Меняем иконку на открытую папку
+                }
+                else {
+                    ul_1.style.display = 'none';
+                    icon.src = './icons/folder.svg'; // Меняем иконку на закрытую папку
+                }
+            });
+        }
+        // Для файлов добавляем функцию открытия содержимого по клику и выделение
+        else if (item.type === 'file') {
+            li.addEventListener('click', function (e) {
+                e.stopPropagation();
+                // Снимаем выделение с предыдущего элемента
+                var previouslySelected = document.querySelector('.selected');
+                if (previouslySelected) {
+                    previouslySelected.classList.remove('selected');
+                }
+                // Выделяем текущий элемент
+                li.classList.add('selected');
+                var filePath = li.dataset.path;
+                if (filePath) {
+                    fetchFileContent(filePath);
+                }
+            });
+        }
+    });
+}
+// Функция для обработки загружаемых файлов
+function uploadFile() {
+    return __awaiter(this, void 0, void 0, function () {
+        var input;
+        var _this = this;
+        return __generator(this, function (_a) {
+            console.log("Функция загрузки файла вызвана");
+            input = document.createElement('input');
+            input.type = 'file';
+            input.multiple = true;
+            input.webkitdirectory = true; // Позволяет выбирать папки
+            input.onchange = function () { return __awaiter(_this, void 0, void 0, function () {
+                var files, formData_1, response, error_2;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            files = input.files;
+                            if (!(files && files.length > 0)) return [3 /*break*/, 4];
+                            formData_1 = new FormData();
+                            Array.from(files).forEach(function (file) {
+                                // Передаем путь относительно выбранной папки
+                                var relativePath = file.webkitRelativePath;
+                                formData_1.append('files', file, relativePath);
+                            });
+                            _a.label = 1;
+                        case 1:
+                            _a.trys.push([1, 3, , 4]);
+                            return [4 /*yield*/, fetch("".concat(API_URL, "/upload"), {
+                                    method: 'POST',
+                                    body: formData_1,
+                                })];
+                        case 2:
+                            response = _a.sent();
+                            if (response.ok) {
+                                alert('Файлы успешно загружены');
+                                fetchFileStructure(); // Обновить структуру файлов
+                            }
+                            else {
+                                alert('Ошибка при загрузке файлов');
+                            }
+                            return [3 /*break*/, 4];
+                        case 3:
+                            error_2 = _a.sent();
+                            console.error('Ошибка при загрузке файлов:', error_2);
+                            return [3 /*break*/, 4];
+                        case 4: return [2 /*return*/];
+                    }
+                });
+            }); };
+            input.click();
+            return [2 /*return*/];
+        });
+    });
+}
+// Функция для получения содержимого файла
+function fetchFileContent(filePath) {
+    return __awaiter(this, void 0, void 0, function () {
+        var response, content, error_3;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 5, , 6]);
+                    return [4 /*yield*/, fetch("".concat(API_URL, "/file-content?path=").concat(encodeURIComponent(filePath)))];
+                case 1:
+                    response = _a.sent();
+                    if (!response.ok) return [3 /*break*/, 3];
+                    return [4 /*yield*/, response.text()];
+                case 2:
+                    content = _a.sent();
+                    displayFileContent(content);
+                    return [3 /*break*/, 4];
+                case 3:
+                    alert('Ошибка при загрузке содержимого файла');
+                    _a.label = 4;
+                case 4: return [3 /*break*/, 6];
+                case 5:
+                    error_3 = _a.sent();
+                    console.error('Ошибка при загрузке содержимого файла:', error_3);
+                    return [3 /*break*/, 6];
+                case 6: return [2 /*return*/];
+            }
+        });
+    });
+}
+// Функция для отображения содержимого файла в окне
+function displayFileContent(content) {
+    var contentViewer = document.getElementById('contentViewer');
+    if (contentViewer) {
+        contentViewer.innerHTML = "<pre>".concat(content, "</pre>");
+    }
+}
+// Функция для создания папки
 function createFolder() {
     return __awaiter(this, void 0, void 0, function () {
-        var folderName, response, error_2;
+        var folderName, response, error_4;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -87,7 +244,7 @@ function createFolder() {
                             headers: {
                                 'Content-Type': 'application/json',
                             },
-                            body: JSON.stringify({ parentPath: '', folderName: folderName }),
+                            body: JSON.stringify({ folderName: folderName }),
                         })];
                 case 2:
                     response = _a.sent();
@@ -100,113 +257,21 @@ function createFolder() {
                     }
                     return [3 /*break*/, 4];
                 case 3:
-                    error_2 = _a.sent();
-                    console.error('Ошибка при создании папки:', error_2);
+                    error_4 = _a.sent();
+                    console.error('Ошибка при создании папки:', error_4);
                     return [3 /*break*/, 4];
                 case 4: return [2 /*return*/];
             }
         });
     });
 }
-// Загрузка файла
-function uploadFile() {
+// Функция для удаления элемента (папка или файл)
+function deleteItem(itemPath) {
     return __awaiter(this, void 0, void 0, function () {
-        var input;
-        var _this = this;
-        return __generator(this, function (_a) {
-            console.log("Функция загрузки файла вызвана");
-            input = document.createElement('input');
-            input.type = 'file';
-            input.onchange = function () { return __awaiter(_this, void 0, void 0, function () {
-                var file, formData, response, error_3;
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            file = input.files ? input.files[0] : null;
-                            if (!file) return [3 /*break*/, 4];
-                            formData = new FormData();
-                            formData.append('file', file);
-                            _a.label = 1;
-                        case 1:
-                            _a.trys.push([1, 3, , 4]);
-                            return [4 /*yield*/, fetch("".concat(API_URL, "/upload"), {
-                                    method: 'POST',
-                                    body: formData,
-                                })];
-                        case 2:
-                            response = _a.sent();
-                            if (response.ok) {
-                                alert('Файл успешно загружен');
-                                fetchFileStructure(); // Обновить структуру файлов
-                            }
-                            else {
-                                alert('Ошибка при загрузке файла');
-                            }
-                            return [3 /*break*/, 4];
-                        case 3:
-                            error_3 = _a.sent();
-                            console.error('Ошибка при загрузке файла:', error_3);
-                            return [3 /*break*/, 4];
-                        case 4: return [2 /*return*/];
-                    }
-                });
-            }); };
-            input.click();
-            return [2 /*return*/];
-        });
-    });
-}
-// Скачивание файла
-function downloadFile() {
-    return __awaiter(this, void 0, void 0, function () {
-        var filename, response, blob, downloadUrl, a, error_4;
+        var response, error_5;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    console.log("Функция скачивания файла вызвана");
-                    filename = prompt('Введите имя файла для скачивания:');
-                    if (!filename) return [3 /*break*/, 7];
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 6, , 7]);
-                    return [4 /*yield*/, fetch("".concat(API_URL, "/download/").concat(filename))];
-                case 2:
-                    response = _a.sent();
-                    if (!response.ok) return [3 /*break*/, 4];
-                    return [4 /*yield*/, response.blob()];
-                case 3:
-                    blob = _a.sent();
-                    downloadUrl = window.URL.createObjectURL(blob);
-                    a = document.createElement('a');
-                    a.href = downloadUrl;
-                    a.download = filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    return [3 /*break*/, 5];
-                case 4:
-                    alert('Ошибка при скачивании файла');
-                    _a.label = 5;
-                case 5: return [3 /*break*/, 7];
-                case 6:
-                    error_4 = _a.sent();
-                    console.error('Ошибка при скачивании файла:', error_4);
-                    return [3 /*break*/, 7];
-                case 7: return [2 /*return*/];
-            }
-        });
-    });
-}
-// Удаление элемента
-function deleteItem() {
-    return __awaiter(this, void 0, void 0, function () {
-        var itemPath, response, error_5;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    console.log('Удаление элемента');
-                    itemPath = prompt('Введите путь элемента для удаления (например, bin):');
-                    if (!itemPath) return [3 /*break*/, 4];
                     if (!confirm("\u0412\u044B \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043B\u044C\u043D\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C ".concat(itemPath, "?"))) return [3 /*break*/, 4];
                     _a.label = 1;
                 case 1:
@@ -237,17 +302,16 @@ function deleteItem() {
         });
     });
 }
-// Переименование элемента
-function renameItem() {
+// Функция для переименования элемента (папка или файл)
+function renameItem(oldPath) {
     return __awaiter(this, void 0, void 0, function () {
-        var oldPath, newPath, response, error_6;
+        var newName, response, error_6;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    console.log('Переименование элемента');
-                    oldPath = prompt('Введите текущий путь элемента для переименования (например, bin):');
-                    newPath = prompt('Введите новое имя:');
-                    if (!(oldPath && newPath)) return [3 /*break*/, 4];
+                    newName = prompt('Введите новое имя:');
+                    if (!newName) return [3 /*break*/, 4];
+                    if (!confirm("\u0412\u044B \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043B\u044C\u043D\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u043F\u0435\u0440\u0435\u0438\u043C\u0435\u043D\u043E\u0432\u0430\u0442\u044C ".concat(oldPath, " \u0432 ").concat(newName, "?"))) return [3 /*break*/, 4];
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
@@ -256,7 +320,7 @@ function renameItem() {
                             headers: {
                                 'Content-Type': 'application/json',
                             },
-                            body: JSON.stringify({ oldPath: oldPath, newPath: newPath }),
+                            body: JSON.stringify({ oldPath: oldPath, newPath: newName }),
                         })];
                 case 2:
                     response = _a.sent();
@@ -277,79 +341,51 @@ function renameItem() {
         });
     });
 }
-// Функция для отображения дерева файлов с поддержкой раскрытия папок
-function renderFileTree(treeData, parentElement) {
-    if (parentElement === void 0) { parentElement = document.getElementById('fileTree'); }
-    parentElement.innerHTML = ''; // Очищаем дерево перед повторной отрисовкой
-    if (treeData.length === 0) {
-        parentElement.innerHTML = '<p>Нет доступных файлов или папок</p>';
-        return;
-    }
-    treeData.forEach(function (item) {
-        var li = document.createElement('li');
-        li.textContent = item.name;
-        li.className = item.type === 'folder' ? 'folder' : 'file';
-        parentElement.appendChild(li);
-        if (item.type === 'folder' && item.children && item.children.length > 0) {
-            var ul_1 = document.createElement('ul');
-            ul_1.style.display = 'none'; // По умолчанию вложенные элементы скрыты
-            li.appendChild(ul_1);
-            renderFileTree(item.children, ul_1);
-            // Добавляем обработчик клика для раскрытия или закрытия папки
-            li.addEventListener('click', function (e) {
-                e.stopPropagation(); // Останавливаем всплытие события
-                ul_1.style.display = ul_1.style.display === 'none' ? 'block' : 'none';
-            });
-        }
-        // Добавление обработчика для выбора файла
-        if (item.type === 'file') {
-            li.addEventListener('click', function (e) {
-                e.stopPropagation();
-                alert("\u0424\u0430\u0439\u043B \u0432\u044B\u0431\u0440\u0430\u043D: ".concat(item.name));
-                // Здесь можно добавить логику для отображения содержимого файла
-            });
-        }
-    });
-}
-// Подключение событий к кнопкам
+// Устанавливаем обработчики и загружаем структуру файлов
 document.addEventListener('DOMContentLoaded', function () {
-    // Загрузка структуры файлов при загрузке страницы
-    console.log('DOM полностью загружен');
-    fetchFileStructure();
-    // Привязка событий к кнопкам
+    fetchFileStructure(); // Загружаем структуру файлов
     var createFolderBtn = document.getElementById('createFolder');
-    var deleteFileBtn = document.getElementById('deleteFile');
-    var renameFileBtn = document.getElementById('renameFile');
+    var deleteItemBtn = document.getElementById('deleteFile');
+    var renameItemBtn = document.getElementById('renameFile');
     var uploadFileBtn = document.getElementById('uploadFile');
-    var downloadFileBtn = document.getElementById('downloadFile');
     if (createFolderBtn) {
         createFolderBtn.addEventListener('click', function () {
             console.log("Кнопка 'Создать папку' была нажата");
             createFolder();
         });
     }
-    if (deleteFileBtn) {
-        deleteFileBtn.addEventListener('click', function () {
-            console.log("Кнопка 'Удалить файл' была нажата");
-            deleteItem();
+    if (deleteItemBtn) {
+        deleteItemBtn.addEventListener('click', function () {
+            var selectedItem = document.querySelector('.selected');
+            if (selectedItem) {
+                var itemPath = selectedItem.dataset.path;
+                if (itemPath) {
+                    deleteItem(itemPath);
+                }
+            }
+            else {
+                alert('Пожалуйста, выберите элемент для удаления');
+            }
         });
     }
-    if (renameFileBtn) {
-        renameFileBtn.addEventListener('click', function () {
-            console.log("Кнопка 'Переименовать файл' была нажата");
-            renameItem();
+    if (renameItemBtn) {
+        renameItemBtn.addEventListener('click', function () {
+            var selectedItem = document.querySelector('.selected');
+            if (selectedItem) {
+                var oldPath = selectedItem.dataset.path;
+                if (oldPath) {
+                    renameItem(oldPath);
+                }
+            }
+            else {
+                alert('Пожалуйста, выберите элемент для переименования');
+            }
         });
     }
     if (uploadFileBtn) {
         uploadFileBtn.addEventListener('click', function () {
             console.log("Кнопка 'Загрузить файл' была нажата");
             uploadFile();
-        });
-    }
-    if (downloadFileBtn) {
-        downloadFileBtn.addEventListener('click', function () {
-            console.log("Кнопка 'Скачать файл' была нажата");
-            downloadFile();
         });
     }
 });
