@@ -34,7 +34,7 @@
 1. **Клонирование репозитория:**
 
     ```
-    git clone <[repository-url](https://github.com/NafisGH/file_store.git)>
+    git clone <https://github.com/NafisGH/file_store.git>
     cd file-store
     ```
 
