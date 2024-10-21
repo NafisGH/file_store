@@ -39,6 +39,25 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+// Маршрут для редактирования содержимого файла
+app.put('/api/edit-file', (req, res) => {
+    const { filePath, content } = req.body;
+    const fullPath = path.join(ROOT_DIR, filePath);
+
+    if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
+        try {
+            fs.writeFileSync(fullPath, content, 'utf-8');
+            res.status(200).send('Файл успешно обновлен');
+        } catch (error) {
+            console.error('Ошибка при редактировании файла:', error);
+            res.status(500).send('Ошибка при редактировании файла');
+        }
+    } else {
+        res.status(404).send('Файл не найден');
+    }
+});
+
+
 // Маршрут для загрузки файлов
 app.post('/api/upload', upload.array('files'), (req, res) => {
     if (req.files && req.files.length > 0) {

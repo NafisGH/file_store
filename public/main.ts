@@ -94,9 +94,22 @@ function renderFileTree(treeData: any[], parentElement: HTMLElement = document.g
                     fetchFileContent(filePath);
                 }
             });
+
+            // Добавить возможность редактирования файла по двойному клику
+            li.addEventListener('dblclick', (e) => {
+                e.stopPropagation();
+
+                // Получаем путь к файлу
+                const filePath = li.dataset.path;
+                if (filePath) {
+                    // Вызов функции для редактирования содержимого файла
+                    editFileContent(filePath);
+                }
+            });
         }
     });
 }
+
 
 
 
@@ -135,13 +148,41 @@ async function uploadFile() {
     input.click();
 }
 
+// Функция для редактирования содержимого файла
+async function editFileContent(filePath: string) {
+    const newContent = prompt('Введите новое содержимое файла:');
+    if (newContent !== null) {
+        try {
+            const response = await fetch(`${API_URL}/edit-file`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ filePath, content: newContent }),
+            });
+            if (response.ok) {
+                alert('Файл успешно обновлен');
+                fetchFileContent(filePath); // Обновить отображение содержимого
+            } else {
+                alert('Ошибка при обновлении файла');
+            }
+        } catch (error) {
+            console.error('Ошибка при обновлении файла:', error);
+        }
+    }
+}
 
-// Функция для получения содержимого файла
+
+// Функция для получения содержимого файла и отображения его
 async function fetchFileContent(filePath: string) {
     try {
         const response = await fetch(`${API_URL}/file-content?path=${encodeURIComponent(filePath)}`);
         if (response.ok) {
             const content = await response.text();
+            const contentViewer = document.getElementById('contentViewer');
+            if (contentViewer) {
+                contentViewer.dataset.filePath = filePath; // Сохраняем путь к файлу
+            }
             displayFileContent(content);
         } else {
             alert('Ошибка при загрузке содержимого файла');
@@ -151,13 +192,55 @@ async function fetchFileContent(filePath: string) {
     }
 }
 
-// Функция для отображения содержимого файла в окне
+
+// Функция для отображения и редактирования содержимого файла в окне
 function displayFileContent(content: string) {
     const contentViewer = document.getElementById('contentViewer');
     if (contentViewer) {
-        contentViewer.innerHTML = `<pre>${content}</pre>`;
+        // Создаем элемент для редактирования текста
+        const editableContent = document.createElement('div');
+        editableContent.contentEditable = "true"; // Делаем текст редактируемым
+        editableContent.innerHTML = `<pre>${content}</pre>`;
+        editableContent.style.border = "1px solid #ccc";
+        editableContent.style.padding = "10px";
+
+        // Добавляем обработчик для автоматического сохранения при изменении текста
+        editableContent.addEventListener('input', async () => {
+            const newContent = editableContent.textContent;
+            if (newContent !== null) {
+                try {
+                    await saveFileContent(contentViewer.dataset.filePath!, newContent);
+                } catch (error) {
+                    console.error('Ошибка при сохранении изменений:', error);
+                }
+            }
+        });
+
+        // Очищаем и вставляем редактируемый элемент
+        contentViewer.innerHTML = '';
+        contentViewer.appendChild(editableContent);
     }
 }
+
+// Функция для автоматического сохранения содержимого файла
+async function saveFileContent(filePath: string, content: string) {
+    try {
+        const response = await fetch(`${API_URL}/edit-file`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ filePath, content }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Ошибка при сохранении файла');
+        }
+    } catch (error) {
+        console.error('Ошибка при автоматическом сохранении файла:', error);
+    }
+}
+
 
 // Функция для создания папки
 async function createFolder() {
